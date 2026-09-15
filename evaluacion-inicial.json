@@ -1,0 +1,102 @@
+[
+  {
+    "question": "¿Qué relación hay entre cocaína, etanol y cocaetileno?",
+    "baseline_sources": [
+      "8ca7a4e22bf40eaa6d7b912a9f9b787f01f89e78d64a45c19bf9a8a9c8051f1b",
+      "e19f9f1ffff264b6ef99b4b95a3eddfa99ffa3c6771c20bb683f08c8f5ed1690",
+      "a94d868ac04e6d03d53cc2fbce8ff49d232f5e29a7f8c8abcb1f94b23972076d",
+      "7b524e50cf8b71b92f2619c3ad141d580b0aad5622fe4dc2cb1c8998d08ac535",
+      "adde8eb6cf2daa55cb71d1ef8847e85880c49f398bcbf57c3910935cecd10a6d",
+      "0bf736a5820ed5a4a823884108576e1ac8206f2b1c5a195aa9d9262a1ee71b39"
+    ],
+    "graph_sources": [
+      "8ca7a4e22bf40eaa6d7b912a9f9b787f01f89e78d64a45c19bf9a8a9c8051f1b",
+      "e19f9f1ffff264b6ef99b4b95a3eddfa99ffa3c6771c20bb683f08c8f5ed1690",
+      "a94d868ac04e6d03d53cc2fbce8ff49d232f5e29a7f8c8abcb1f94b23972076d",
+      "7b524e50cf8b71b92f2619c3ad141d580b0aad5622fe4dc2cb1c8998d08ac535",
+      "926337c3934364c5fff3ca90850063f2852a5c19008afc00ee0c38c04a26120c",
+      "985bb4fa198ce73a76d971b5ba5a4554a8904d482a71e2cd5749e8d10de342f1"
+    ],
+    "new_chunks": 2,
+    "relations": 7,
+    "human_relevance_evaluation": "pending"
+  },
+  {
+    "question": "¿Qué metabolitos de cocaína se detectan en orina?",
+    "baseline_sources": [
+      "dd1706b85201992f2ac8a6c29e729e079fce9fd00be8025c4b33d39a3c50f47c",
+      "4b1a1133fce01bb0a59d6d5210fd0b45ce2924843069af83a9f152ff5df4c880",
+      "9e7feddf6119d41ab7664b45e3e63c030aa0330f07f8c76dc1098876e98bc582",
+      "a94d868ac04e6d03d53cc2fbce8ff49d232f5e29a7f8c8abcb1f94b23972076d",
+      "628eb130f6bf2cf9ad8b3291b875bcb00961b4ca4cf113fabc1d99bbc63cfb2e",
+      "e1dccc4141a71645f4ba55522f552a65e47cabca55a04bb3c6de9b53e0101bf0"
+    ],
+    "graph_sources": [
+      "dd1706b85201992f2ac8a6c29e729e079fce9fd00be8025c4b33d39a3c50f47c",
+      "4b1a1133fce01bb0a59d6d5210fd0b45ce2924843069af83a9f152ff5df4c880",
+      "9e7feddf6119d41ab7664b45e3e63c030aa0330f07f8c76dc1098876e98bc582",
+      "628eb130f6bf2cf9ad8b3291b875bcb00961b4ca4cf113fabc1d99bbc63cfb2e",
+      "7b524e50cf8b71b92f2619c3ad141d580b0aad5622fe4dc2cb1c8998d08ac535",
+      "df3a90630d6f1f6fff15688cc7c99ce766228d3d2a36e71cfa1dc00b54305967"
+    ],
+    "new_chunks": 2,
+    "relations": 14,
+    "human_relevance_evaluation": "pending"
+  },
+  {
+    "question": "¿Qué limitaciones tienen los inmunoensayos para detectar drogas?",
+    "baseline_sources": [
+      "0d551552ffba3e62ed0166e5d66101238a742c51fd958ff03e9305fd97a387a1",
+      "4cfc4d8001209fb16310d8faf58bd06d9c2d5ea6e15d90e0d778db8731b8bac8",
+      "1db5a594318edb41b0a5ff94017e2a86b4762be4dea1872332831bb1c267fafe",
+      "a7c9e0f01d10b8c4c7f000e6f751659da9f3568b14e7f300878f31894b4a56bf",
+      "9e7feddf6119d41ab7664b45e3e63c030aa0330f07f8c76dc1098876e98bc582",
+      "fe61897858d26aa1ecbe860f1a965ad49bc01dca55967a1a378f6745e486f430"
+    ],
+    "graph_sources": [
+      "0d551552ffba3e62ed0166e5d66101238a742c51fd958ff03e9305fd97a387a1",
+      "4cfc4d8001209fb16310d8faf58bd06d9c2d5ea6e15d90e0d778db8731b8bac8",
+      "1db5a594318edb41b0a5ff94017e2a86b4762be4dea1872332831bb1c267fafe",
+      "a7c9e0f01d10b8c4c7f000e6f751659da9f3568b14e7f300878f31894b4a56bf",
+      "9e7feddf6119d41ab7664b45e3e63c030aa0330f07f8c76dc1098876e98bc582",
+      "fe61897858d26aa1ecbe860f1a965ad49bc01dca55967a1a378f6745e486f430"
+    ],
+    "new_chunks": 0,
+    "relations": 2,
+    "human_relevance_evaluation": "pending"
+  },
+  {
+    "question": "¿Cómo se relaciona el etilglucurónido con el consumo de etanol y el cabello?",
+    "baseline_sources": [
+      "926337c3934364c5fff3ca90850063f2852a5c19008afc00ee0c38c04a26120c",
+      "924b35dd7b5ac3a92774e3e73c44325cae1443d524e8fec9c3c82c948faca85d",
+      "f06b0dc4a9ede93544975675998b339f9f5718338d03d8470e59e65f4c2ce6b8",
+      "fb23316c22976c6ac25655b9f1410ea8a836d6763130f5c09737a982f7cc226f",
+      "7146527a4c97c11bac179d57aca62ab60cb5b7ab29a7a58d77b298d9fcd9dece",
+      "f4306b0820b66398a92ee3b9637508a689f66876f794e386c172a55bbb2b9da4"
+    ],
+    "graph_sources": [
+      "926337c3934364c5fff3ca90850063f2852a5c19008afc00ee0c38c04a26120c",
+      "924b35dd7b5ac3a92774e3e73c44325cae1443d524e8fec9c3c82c948faca85d",
+      "f06b0dc4a9ede93544975675998b339f9f5718338d03d8470e59e65f4c2ce6b8",
+      "fb23316c22976c6ac25655b9f1410ea8a836d6763130f5c09737a982f7cc226f",
+      "df3a90630d6f1f6fff15688cc7c99ce766228d3d2a36e71cfa1dc00b54305967",
+      "979d592f540d14e7a68a8959279ee51c8d152a5e9fc8ad7d0ba74636c8faf0ff"
+    ],
+    "new_chunks": 2,
+    "relations": 11,
+    "human_relevance_evaluation": "pending"
+  },
+  {
+    "question": "¿Cuál es la capital de Mongolia?",
+    "baseline_sources": [
+      "9de6c07b2495a3e2276ca4154a58bf1166582b4e5e346ca260e8c44a305bb217"
+    ],
+    "graph_sources": [
+      "9de6c07b2495a3e2276ca4154a58bf1166582b4e5e346ca260e8c44a305bb217"
+    ],
+    "new_chunks": 0,
+    "relations": 0,
+    "human_relevance_evaluation": "pending"
+  }
+]

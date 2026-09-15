@@ -1,0 +1,4 @@
+openai>=1.0,<3
+python-dotenv>=1.0,<2
+pypdf>=5,<7
+graphifyy==0.9.26

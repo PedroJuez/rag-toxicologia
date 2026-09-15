@@ -1,0 +1,11 @@
+{
+  "source_project": "C:/Users/Uned/Documents/rag_intcf",
+  "corpus_id": "intcf-piloto",
+  "original_llm": "gpt-4o-mini",
+  "original_embedding_model": "text-embedding-3-small",
+  "retrieval": "BM25 plus one-hop assertion evidence",
+  "storage": "local JSON; Neo4j not used",
+  "generation": "opt-in OpenAI using original .env; no real API call tested",
+  "listen": "127.0.0.1:8767",
+  "anydoc_version": "0.2.4"
+}
