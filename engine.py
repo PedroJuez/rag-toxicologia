@@ -123,6 +123,7 @@ def generate(result):
     answer=content.get('answer')
     if not isinstance(answer,str) or not answer.strip() or not isinstance(cited,list) or not all(isinstance(c,str) and c in allowed for c in cited):
         raise ValueError('El modelo devolvió citas no válidas; consulta los fragmentos.')
-    inline=set(re.findall(r'\[(F\d+)\]',answer))
+    # El modelo agrupa citas en un mismo corchete, p.ej. "[F4, F5]"; hay que extraer cada ID por separado.
+    inline={m for group in re.findall(r'\[([^\[\]]*)\]',answer) for m in re.findall(r'F\d+',group)}
     if not inline.issubset(set(cited)) or (cited and not inline):raise ValueError('Las citas de la respuesta no coinciden con las fuentes.')
     return dict(result,answer=answer,generation=model,generation_tested=True,cited_ids=cited,usage=response.usage.model_dump() if response.usage else None)
