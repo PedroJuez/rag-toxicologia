@@ -93,6 +93,41 @@ class Documents:
             except Exception:
                 (folder/'chunks.jsonl').write_bytes(old);raise
             return {'message':'Documento disponible para búsqueda y citas. Grafo pendiente.','document_id':docid}
+    def delete(self,docid):
+        with self.lock:
+            if self.running:raise ValueError('Espera a que termine la actualización del grafo.')
+            e=Engine(self.root)
+            record=next((d for d in e.manifest['documents'] if d['document_id']==docid),None)
+            if record is None:raise ValueError('Documento desconocido.')
+            chunk_ids={c['chunk_id'] for c in e.rows if c['document_id']==docid}
+            folder=self.root/'data'
+            old_knowledge=(folder/'knowledge.json').read_bytes()
+            old_chunks=(folder/'chunks.jsonl').read_bytes()
+            old_progress=(folder/'graph-progress.json').read_bytes()
+            normalized_path=folder/record['normalized_file']
+            normalized_bytes=normalized_path.read_bytes() if normalized_path.exists() else None
+            upload_path=folder/'uploads'/(docid+Path(record['source_file']).suffix.lower())
+            upload_bytes=upload_path.read_bytes() if upload_path.exists() else None
+            try:
+                # Las relaciones se podan; los conceptos (nodos) se conservan aunque
+                # se queden sin relaciones, porque otro documento puede reutilizarlos.
+                graph=dict(e.graph,edges=[x for x in e.graph['edges'] if x['chunk_id'] not in chunk_ids])
+                write(folder/'knowledge.json',graph)
+                rows=[c for c in e.rows if c['document_id']!=docid]
+                temp=folder/'chunks.jsonl.tmp';temp.write_text(''.join(json.dumps(r,ensure_ascii=False)+'\n' for r in rows),encoding='utf8');temp.replace(folder/'chunks.jsonl')
+                write(folder/'graph-progress.json',[cid for cid in self.progress() if cid not in chunk_ids])
+                if normalized_bytes is not None:normalized_path.unlink()
+                if upload_bytes is not None:upload_path.unlink()
+                e.manifest['documents']=[d for d in e.manifest['documents'] if d['document_id']!=docid]
+                write(folder/'manifest.json',e.manifest)
+            except Exception:
+                (folder/'knowledge.json').write_bytes(old_knowledge)
+                (folder/'chunks.jsonl').write_bytes(old_chunks)
+                (folder/'graph-progress.json').write_bytes(old_progress)
+                if normalized_bytes is not None and not normalized_path.exists():normalized_path.write_bytes(normalized_bytes)
+                if upload_bytes is not None and not upload_path.exists():upload_path.write_bytes(upload_bytes)
+                raise
+            return {'message':'Documento eliminado del corpus.'}
     def start(self,docid):
         with self.lock:
             if self.running:raise ValueError('Ya hay una actualización en curso.')

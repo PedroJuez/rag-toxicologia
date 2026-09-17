@@ -10,12 +10,13 @@ Sin ninguna de ellas, el comportamiento es idéntico al original: escucha solo e
                          ej. ragtox.pedrojuezmartel.com
     RAGTOX_ALLOWED_ORIGINS  orígenes permitidos en POST, separados por comas
                          ej. https://ragtox.pedrojuezmartel.com
-    RAGTOX_READONLY      1 = sin subida de documentos ni extracción de grafo
+    RAGTOX_READONLY      1 = sin subida, borrado ni extracción de grafo de documentos
 
 Por qué el modo de solo lectura: /api/documents/graph llama al proveedor con tu
-clave. Publicado sin autenticación, cualquiera podría consumir la cuota. Con
-RAGTOX_READONLY=1 esos dos extremos devuelven 403 y la pestaña «Documentos» se
-oculta en la interfaz. El corpus se prepara en local y se despliega ya hecho.
+clave. Publicado sin autenticación, cualquiera podría consumir la cuota, subir
+contenido o borrar el corpus. Con RAGTOX_READONLY=1 esos extremos devuelven 403
+y la pestaña «Documentos» se oculta en la interfaz. El corpus se prepara en
+local y se despliega ya hecho.
 """
 
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -105,7 +106,8 @@ def serve(port=8767, open_browser=False, bind=None):
         def do_POST(self):
             if not self.host_valido():
                 return self.send(403, {'error': 'Host inválido'})
-            if self.path not in ('/api/query', '/api/documents/upload', '/api/documents/graph'):
+            if self.path not in ('/api/query', '/api/documents/upload', '/api/documents/graph',
+                                 '/api/documents/delete'):
                 return self.send(404, {'error': 'No encontrado'})
             if READONLY and self.path != '/api/query':
                 return self.send(403, {'error': 'Esta instalación es de solo consulta. '
@@ -122,6 +124,8 @@ def serve(port=8767, open_browser=False, bind=None):
                 request = json.loads(self.rfile.read(length))
                 if self.path == '/api/documents/upload':
                     return self.send(200, documents.upload(request.get('name'), request.get('content')))
+                if self.path == '/api/documents/delete':
+                    return self.send(200, documents.delete(request.get('document_id')))
                 if self.path == '/api/documents/graph':
                     return self.send(202, documents.start(request.get('document_id')))
                 q = request.get('question'); mode = request.get('mode', 'graph')
