@@ -54,7 +54,7 @@ Siguiente fase: elegir preguntas reales y evidencias esperadas, ampliar extracci
 
 En «Documentos», selecciona PDF con texto, TXT/Markdown UTF-8 o DOCX y pulsa «Añadir archivos». Límite: 15 MB por archivo y dos millones de caracteres. Los documentos quedan disponibles en las consultas sin reiniciar. Se rechazan contenidos duplicados y nombres existentes; para conservar una versión nueva, usa otro nombre. No se sustituyen ni borran las fuentes anteriores.
 
-La carga extrae texto localmente (pypdf para PDF y XML del cuerpo para DOCX); no utiliza OCR. Los PDF con páginas sin texto se rechazan para evitar omisiones. En DOCX, revisa tablas, imágenes y elementos fuera del cuerpo, que no se interpretan visualmente.
+La carga extrae texto localmente (pymupdf4llm para PDF, con tablas convertidas a Markdown, y XML del cuerpo para DOCX); no utiliza OCR. Los PDF con páginas sin texto se rechazan para evitar omisiones. En DOCX, revisa tablas, imágenes y elementos fuera del cuerpo, que no se interpretan visualmente.
 
 «Actualizar grafo» envía los fragmentos pendientes del documento al proveedor de .env. Consume cuota, valida citas literales y guarda el progreso por fragmento. Al terminar regenera el mapa y la bóveda. Si falla o cierras el servidor, vuelve a pulsar el botón para continuar. La búsqueda sigue disponible mientras se extraen relaciones. Un fragmento procesado puede no contener ninguna relación explícita. Las relaciones iniciales del piloto son una muestra, por eso se distinguen del progreso completo.
 

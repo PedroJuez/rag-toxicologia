@@ -53,9 +53,10 @@ class Documents:
             if any(d['source_file'].casefold()==name.casefold() for d in e.manifest['documents']):raise ValueError('Ya existe ese nombre. Renombra la nueva versión para conservar ambas fuentes.')
             pages=None
             if suffix=='.pdf':
-                from pypdf import PdfReader
+                import pymupdf, pymupdf4llm
                 try:
-                    reader=PdfReader(io.BytesIO(data));pages=[p.extract_text() or '' for p in reader.pages]
+                    with pymupdf.open(stream=data,filetype='pdf') as pdf:
+                        pages=[chunk['text'] for chunk in pymupdf4llm.to_markdown(pdf,page_chunks=True)]
                 except Exception:raise ValueError('No se puede leer el PDF; comprueba si está protegido o dañado.') from None
                 if any(not p.strip() for p in pages):raise ValueError('El PDF contiene páginas sin texto extraíble. Aplica OCR antes de cargarlo para no omitirlas.')
                 text='\n\n'.join(pages)
