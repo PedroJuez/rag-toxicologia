@@ -4,11 +4,11 @@ services:
     container_name: ragtox
     restart: unless-stopped
     environment:
-      RAGTOX_BIND: 0.0.0.0
-      RAGTOX_PORT: 8767
-      RAGTOX_READONLY: 1
-      RAGTOX_ALLOWED_HOSTS: ragtox.pedrojuezmartel.com
-      RAGTOX_ALLOWED_ORIGINS: https://ragtox.pedrojuezmartel.com
+      RAG_BIND: 0.0.0.0
+      RAG_PORT: 8767
+      RAG_READONLY: 1
+      RAG_ALLOWED_HOSTS: ragtox.pedrojuezmartel.com
+      RAG_ALLOWED_ORIGINS: https://ragtox.pedrojuezmartel.com
       # La clave nunca va en la imagen: se lee del .env del servidor
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
       LLM_MODEL: ${LLM_MODEL:-gemini-3.8-flash}

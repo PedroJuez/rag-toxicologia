@@ -12,7 +12,7 @@ COPY . .
 
 # Dentro del contenedor hay que escuchar en todas las interfaces para que el
 # proxy pueda alcanzarlo; el aislamiento lo da la red de Docker, no el bind.
-ENV RAGTOX_BIND=0.0.0.0 RAGTOX_PORT=8767 RAGTOX_READONLY=1
+ENV RAG_BIND=0.0.0.0 RAG_PORT=8767 RAG_READONLY=1
 
 EXPOSE 8767
 

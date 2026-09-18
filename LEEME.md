@@ -59,3 +59,42 @@ La carga extrae texto localmente (pymupdf4llm para PDF, con tablas convertidas a
 «Actualizar grafo» envía los fragmentos pendientes del documento al proveedor de .env. Consume cuota, valida citas literales y guarda el progreso por fragmento. Al terminar regenera el mapa y la bóveda. Si falla o cierras el servidor, vuelve a pulsar el botón para continuar. La búsqueda sigue disponible mientras se extraen relaciones. Un fragmento procesado puede no contener ninguna relación explícita. Las relaciones iniciales del piloto son una muestra, por eso se distinguen del progreso completo.
 
 La exportación necesita graphifyy. En este equipo se usa su entorno ya instalado; en otros equipos instala graphifyy en el entorno del servidor o define GRAPHIFY_PYTHON con la ruta del Python que lo tiene instalado. Los archivos nuevos se guardan dentro de data/ (excluido de Git). Haz copias de esa carpeta para respaldar fuentes y progreso. No edites la bóveda exportada como única copia de tus notas personales: los archivos generados pueden actualizarse al exportar.
+
+## Añadir una temática nueva
+
+El motor (BM25, grafo con citas verificadas, interfaz) es el mismo para cualquier
+temática; lo que cambia por instancia es el corpus y unas pocas variables de
+entorno. Cada instancia corre en su propio contenedor, con el mismo código y su
+propio corpus montado como volumen. Sin ninguna variable definida, una
+instancia se comporta exactamente como ragtox hoy.
+
+1. **Prepara el corpus aparte.** Convierte los documentos de la temática nueva
+   con `prepare_corpus.py --source <carpeta origen> --output <carpeta destino>
+   --corpus-id <id>`. El destino es una carpeta nueva y vacía (no reutilices
+   `./data`); ahí es donde luego apuntará `RAG_DATA_DIR`.
+2. **Junta `data/`, `graphify-out/` y `boveda-obsidian/` en una carpeta de
+   corpus.** `RAG_DATA_DIR` apunta a esa carpeta, que debe contener los tres
+   subdirectorios (igual que hoy los contiene la raíz del proyecto). Súbelos al
+   servidor como el volumen propio de esa instancia.
+3. **Define las variables de la instancia** (todas opcionales; sin definirlas,
+   el texto es el de toxicología):
+   - `RAG_DATA_DIR`: ruta del corpus preparado en el paso 2.
+   - `RAG_SIGLA`: sigla corta (título de pestaña, nombre del ZIP de Obsidian);
+     p.ej. `URG`, `CONCURSAL`, `ITRABAJO`.
+   - `RAG_TITULO`: titular de la cabecera.
+   - `RAG_SUBTITULO`: párrafo bajo el titular.
+   - `RAG_EJEMPLOS`: botones de ejemplo, formato `Etiqueta::Pregunta` separados
+     por `|`, p.ej. `Etiqueta uno::¿Pregunta uno?|Etiqueta dos::¿Pregunta dos?`.
+   - `RAG_AVISO`: aviso del pie de página.
+   - `RAG_ALLOWED_HOSTS` / `RAG_ALLOWED_ORIGINS`: dominio público de esa
+     instancia.
+   - `RAG_PORT`: si conviven varias instancias en el mismo host, cada una con
+     su puerto.
+4. **Sigue el patrón de `docker-compose.example.yml`**: mismo `build: .` para
+   todas las instancias, cada una con su propio `container_name`, su volumen
+   de corpus en `RAG_DATA_DIR` y sus variables de texto. No es un archivo para
+   desplegar tal cual: sirve de plantilla para tu `docker-compose.yml` real.
+
+Las variables `RAGTOX_*` (nombres previos a que el motor fuese común) se
+siguen leyendo como alias de las `RAG_*` correspondientes, para no romper el
+despliegue de ragtox ya en marcha.

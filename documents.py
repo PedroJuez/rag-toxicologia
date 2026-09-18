@@ -1,7 +1,7 @@
 """Local imports and resumable, evidence-checked graph extraction."""
 import base64, hashlib, io, json, os, re, subprocess, sys, threading, zipfile
 from pathlib import Path
-from engine import Engine, ROOT, model_config, norm
+from engine import Engine, ROOT, DATA_DIR, model_config, norm
 from prepare_corpus import chunks
 
 
@@ -29,7 +29,7 @@ def write(path,value):
 
 
 class Documents:
-    def __init__(self,root=ROOT):
+    def __init__(self,root=DATA_DIR):
         self.root=Path(root);self.lock=threading.RLock();self.running=False
         self.status={'state':'idle','message':'Sin tareas en curso.'}
     def listing(self):
@@ -209,5 +209,8 @@ class Documents:
             write(out/'extraction.json',{'nodes':nodes,'edges':edges})
             python=os.environ.get('GRAPHIFY_PYTHON') or sys.executable
             if not Path(python).is_file():python=sys.executable
-            result=subprocess.run([python,str(self.root/'export_views.py')],capture_output=True,timeout=180)
+            # export_views.py es código y vive junto al motor (ROOT), no en el
+            # corpus (self.root/DATA_DIR); hereda RAG_DATA_DIR del entorno para
+            # saber dónde escribir el mapa y la bóveda.
+            result=subprocess.run([python,str(ROOT/'export_views.py')],capture_output=True,timeout=180)
             if result.returncode:raise ValueError('La búsqueda y las relaciones están guardadas, pero falló la exportación del mapa o de la bóveda. No es necesario volver a cargar los documentos. Revisa el exportador y sus dependencias.')

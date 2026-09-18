@@ -4,7 +4,7 @@ from graphify.build import build_from_json
 from graphify.cluster import cluster
 from graphify.export import to_html, to_obsidian, to_canvas
 
-root=Path(__file__).resolve().parent
+root=Path(os.environ.get('RAG_DATA_DIR') or Path(__file__).resolve().parent).resolve()
 out=root/'graphify-out'
 extraction=json.loads((out/'extraction.json').read_text(encoding='utf8'))
 knowledge=json.loads((root/'data/knowledge.json').read_text(encoding='utf8'))

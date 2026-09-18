@@ -1,20 +1,35 @@
 """Servidor del piloto. En local funciona igual que antes: python app.py
 
-Para desplegarlo detrás de un proxy inverso se configura por variables de entorno.
-Sin ninguna de ellas, el comportamiento es idéntico al original: escucha solo en
-127.0.0.1 y rechaza cualquier Host que no sea local.
+El motor (BM25, grafo, interfaz) es agnóstico del dominio; cada despliegue lo
+personaliza con variables de entorno, sin tocar el código. Para desplegarlo
+detrás de un proxy inverso también se configura por variables de entorno. Sin
+ninguna de ellas, el comportamiento es idéntico al original: escucha solo en
+127.0.0.1, rechaza cualquier Host que no sea local y muestra los textos de
+toxicología de siempre.
 
-    RAGTOX_BIND          dirección de escucha (por defecto 127.0.0.1; en Docker 0.0.0.0)
-    RAGTOX_PORT          puerto (por defecto 8767)
-    RAGTOX_ALLOWED_HOSTS hosts permitidos, separados por comas
+    RAG_BIND             dirección de escucha (por defecto 127.0.0.1; en Docker 0.0.0.0)
+    RAG_PORT             puerto (por defecto 8767)
+    RAG_ALLOWED_HOSTS    hosts permitidos, separados por comas
                          ej. ragtox.pedrojuezmartel.com
-    RAGTOX_ALLOWED_ORIGINS  orígenes permitidos en POST, separados por comas
+    RAG_ALLOWED_ORIGINS  orígenes permitidos en POST, separados por comas
                          ej. https://ragtox.pedrojuezmartel.com
-    RAGTOX_READONLY      1 = sin subida, borrado ni extracción de grafo de documentos
+    RAG_READONLY         1 = sin subida, borrado ni extracción de grafo de documentos
+    RAG_DATA_DIR         ruta del corpus (data/, graphify-out/, boveda-obsidian/);
+                         por defecto, junto al código, como siempre
+    RAG_SIGLA            sigla corta de la instancia (título de pestaña, bóveda
+                         de Obsidian); por defecto INTCF
+    RAG_TITULO           titular de la cabecera
+    RAG_SUBTITULO        párrafo bajo el titular
+    RAG_EJEMPLOS         botones de ejemplo: "Etiqueta::Pregunta" separados por |
+    RAG_AVISO            aviso del pie de página
+
+    Las variables RAGTOX_* (nombres anteriores a que el motor fuese común a
+    varios RAG) se siguen leyendo si RAG_* no está definida, para no romper el
+    despliegue ya en marcha de ragtox.
 
 Por qué el modo de solo lectura: /api/documents/graph llama al proveedor con tu
 clave. Publicado sin autenticación, cualquiera podría consumir la cuota, subir
-contenido o borrar el corpus. Con RAGTOX_READONLY=1 esos extremos devuelven 403
+contenido o borrar el corpus. Con RAG_READONLY=1 esos extremos devuelven 403
 y la pestaña «Documentos» se oculta en la interfaz. El corpus se prepara en
 local y se despliega ya hecho.
 """
@@ -23,31 +38,44 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 import argparse, json, os, secrets, threading, webbrowser
 
-from engine import Engine, generate, model_config
+from engine import Engine, generate, model_config, DATA_DIR
 from documents import Documents
 
 ROOT = Path(__file__).resolve().parent
 
 
+def _env(nombre, default=''):
+    """RAG_<nombre>, o RAGTOX_<nombre> por compatibilidad, o el valor por defecto."""
+    return os.environ.get('RAG_' + nombre) or os.environ.get('RAGTOX_' + nombre) or default
+
+
 def _lista(nombre):
-    return {x.strip() for x in (os.environ.get(nombre) or '').split(',') if x.strip()}
+    return {x.strip() for x in (_env(nombre) or '').split(',') if x.strip()}
 
 
-READONLY = os.environ.get('RAGTOX_READONLY', '').strip() in ('1', 'true', 'yes')
+def _esc_html(s):
+    return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
+def _esc_attr(s):
+    return _esc_html(s).replace('"', '&quot;')
+
+
+READONLY = _env('READONLY').strip() in ('1', 'true', 'yes')
 
 
 def serve(port=8767, open_browser=False, bind=None):
-    bind = bind or os.environ.get('RAGTOX_BIND') or '127.0.0.1'
+    bind = bind or _env('BIND', '127.0.0.1')
     documents = Documents()
     token = secrets.token_urlsafe(24)
     busy = threading.BoundedSemaphore(2)
 
-    hosts_ok = _lista('RAGTOX_ALLOWED_HOSTS') | {f'127.0.0.1:{port}', f'localhost:{port}'}
-    origins_ok = _lista('RAGTOX_ALLOWED_ORIGINS') | {f'http://127.0.0.1:{port}',
-                                                     f'http://localhost:{port}'}
+    hosts_ok = _lista('ALLOWED_HOSTS') | {f'127.0.0.1:{port}', f'localhost:{port}'}
+    origins_ok = _lista('ALLOWED_ORIGINS') | {f'http://127.0.0.1:{port}',
+                                              f'http://localhost:{port}'}
 
     # Con el corpus fijo, el índice BM25 no cambia: se construye una sola vez.
-    # Sin RAGTOX_READONLY se mantiene el comportamiento original (un motor nuevo
+    # Sin RAG_READONLY se mantiene el comportamiento original (un motor nuevo
     # por consulta), que es lo que permite ver los documentos recién subidos.
     _cache = {}
 
@@ -75,7 +103,32 @@ def serve(port=8767, open_browser=False, bind=None):
             if not self.host_valido():
                 return self.send(403, {'error': 'Host inválido'})
             if self.path == '/':
-                html = (ROOT / 'index.html').read_text(encoding='utf8').replace('__TOKEN__', token)
+                sigla = _env('SIGLA', 'INTCF')
+                titulo = _env('TITULO', 'De encontrar textos a conectar evidencias')
+                subtitulo = _env('SUBTITULO', 'Explora tus documentos, consulta sus fragmentos y '
+                                  'comprueba qué relaciones añade el grafo. Una prueba local para '
+                                  'evaluar el método, con las fuentes siempre a la vista.')
+                aviso = _env('AVISO', 'Uso exploratorio y documental. No validado para conclusiones '
+                             'periciales. El comparador utiliza una base BM25 local; no mide el RAG '
+                             'semántico Chroma original.')
+                ejemplos_raw = _env('EJEMPLOS',
+                    'Cocaína + etanol::¿Qué relación hay entre cocaína, etanol y cocaetileno?|'
+                    'Metabolitos y muestras::¿Qué metabolitos de cocaína se detectan en orina?|'
+                    'Cribado y confirmación::¿Qué limitaciones tienen los inmunoensayos para detectar drogas?|'
+                    'EtG y cabello::¿Cómo se relaciona el etilglucurónido con el consumo de etanol y el cabello?')
+                ejemplos = [tuple(p.split('::', 1)) for p in ejemplos_raw.split('|') if '::' in p]
+                ejemplos_html = ''.join(
+                    f'<button data-q="{_esc_attr(pregunta.strip())}">{_esc_html(etiqueta.strip())}</button>'
+                    for etiqueta, pregunta in ejemplos)
+                pregunta_inicial = ejemplos[0][1].strip() if ejemplos else ''
+                html = (ROOT / 'index.html').read_text(encoding='utf8')
+                html = (html.replace('__TOKEN__', token)
+                            .replace('__SIGLA__', _esc_html(sigla))
+                            .replace('__TITULO__', _esc_html(titulo))
+                            .replace('__SUBTITULO__', _esc_html(subtitulo))
+                            .replace('__AVISO__', _esc_html(aviso))
+                            .replace('__EJEMPLOS__', ejemplos_html)
+                            .replace('__PREGUNTA_INICIAL__', _esc_html(pregunta_inicial)))
                 if READONLY:
                     # Oculta la pestaña de documentos sin tocar index.html
                     html = html.replace(
@@ -90,14 +143,15 @@ def serve(port=8767, open_browser=False, bind=None):
                 return self.send(200, config)
             if self.path == '/obsidian.zip':
                 import io, zipfile
+                sigla = _env('SIGLA', 'INTCF')
                 buffer = io.BytesIO()
                 with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
-                    for file in (ROOT / 'boveda-obsidian').rglob('*'):
+                    for file in (DATA_DIR / 'boveda-obsidian').rglob('*'):
                         if file.is_file() and file.suffix in ('.md', '.canvas'):
-                            archive.write(file, 'INTCF/' + file.relative_to(ROOT / 'boveda-obsidian').as_posix())
+                            archive.write(file, sigla + '/' + file.relative_to(DATA_DIR / 'boveda-obsidian').as_posix())
                 return self.send(200, buffer.getvalue(), 'application/zip')
             if self.path == '/graph':
-                graph = ROOT / 'graphify-out/graph.html'
+                graph = DATA_DIR / 'graphify-out/graph.html'
                 if not graph.is_file(): return self.send(404, b'El grafo no esta exportado todavia.', 'text/plain')
                 return self.send(200, graph.read_bytes(), 'text/html')
             if self.path == '/health': return self.send(200, {'status': 'ok'})
@@ -152,7 +206,7 @@ def serve(port=8767, open_browser=False, bind=None):
                                          'Prueba sin redacción externa.'})
 
     server = ThreadingHTTPServer((bind, port), Handler)
-    print(f'INTCF GraphRAG escuchando en {bind}:{port}'
+    print(f'{_env("SIGLA", "INTCF")} GraphRAG escuchando en {bind}:{port}'
           + (' · solo consulta' if READONLY else ''), flush=True)
     if open_browser: webbrowser.open(f'http://127.0.0.1:{port}')
     try: server.serve_forever()
@@ -162,7 +216,7 @@ def serve(port=8767, open_browser=False, bind=None):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('--port', type=int, default=int(os.environ.get('RAGTOX_PORT', 8767)))
+    p.add_argument('--port', type=int, default=int(_env('PORT', '8767')))
     p.add_argument('--open', action='store_true')
     p.add_argument('--bind', default=None)
     a = p.parse_args()

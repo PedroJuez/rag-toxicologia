@@ -1,9 +1,13 @@
 """Local BM25 + evidence graph retrieval; no network during retrieval."""
 from pathlib import Path
 from collections import Counter, defaultdict
-import json, math, re, unicodedata
+import json, math, os, re, unicodedata
 
 ROOT=Path(__file__).resolve().parent
+# El corpus (data/, graphify-out/, boveda-obsidian/) vive junto al código por
+# defecto, igual que siempre. RAG_DATA_DIR permite montarlo en otra ruta (p.ej.
+# un volumen Docker propio por instancia) sin tocar el código de cada motor.
+DATA_DIR=Path(os.environ.get('RAG_DATA_DIR') or ROOT).resolve()
 STOP=set('de del la las el los un una unos unas y o en por para con sin al que se es son como cual cuales hay sobre entre a su sus lo le me quiero saber segun documentos'.split())
 def norm(text):
     return ''.join(c for c in unicodedata.normalize('NFD',text.lower()) if not unicodedata.combining(c))
@@ -11,7 +15,7 @@ def tokens(text):
     return [t for t in re.findall(r'[a-z0-9]+',norm(text)) if len(t)>2 and t not in STOP]
 
 class Engine:
-    def __init__(self, root=ROOT):
+    def __init__(self, root=DATA_DIR):
         self.root=Path(root)
         self.manifest=json.loads((self.root/'data/manifest.json').read_text(encoding='utf8'))
         if self.manifest['status']!='complete':raise ValueError('Incomplete corpus')

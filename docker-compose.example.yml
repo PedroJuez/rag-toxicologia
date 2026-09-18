@@ -1,0 +1,73 @@
+# Patrón para desplegar varias temáticas con el mismo motor y código, cada una
+# con su corpus propio. Es un ejemplo: copia lo que necesites a tu
+# docker-compose.yml real. No lo levantes tal cual en el servidor sin haber
+# preparado antes el corpus de cada temática (ver LEEME.md, «Añadir una
+# temática nueva»); un servicio sin corpus en su volumen no arranca.
+#
+# Cada servicio monta su corpus (data/, graphify-out/, boveda-obsidian/) como
+# volumen en una ruta propia y se lo indica al motor con RAG_DATA_DIR, en vez
+# de hornear el corpus dentro de la imagen. Así el mismo build sirve para
+# todas las instancias.
+services:
+  ragtox:
+    build: .
+    container_name: ragtox
+    restart: unless-stopped
+    environment:
+      RAG_BIND: 0.0.0.0
+      RAG_PORT: 8767
+      RAG_READONLY: 1
+      RAG_DATA_DIR: /corpus
+      RAG_ALLOWED_HOSTS: ragtox.pedrojuezmartel.com
+      RAG_ALLOWED_ORIGINS: https://ragtox.pedrojuezmartel.com
+      RAG_SIGLA: INTCF
+      RAG_TITULO: De encontrar textos a conectar evidencias
+      RAG_SUBTITULO: >-
+        Explora tus documentos, consulta sus fragmentos y comprueba qué
+        relaciones añade el grafo. Una prueba local para evaluar el método,
+        con las fuentes siempre a la vista.
+      RAG_EJEMPLOS: >-
+        Cocaína + etanol::¿Qué relación hay entre cocaína, etanol y
+        cocaetileno?|Metabolitos y muestras::¿Qué metabolitos de cocaína se
+        detectan en orina?
+      RAG_AVISO: >-
+        Uso exploratorio y documental. No validado para conclusiones
+        periciales.
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LLM_MODEL: ${LLM_MODEL:-gemini-3.8-flash}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - ./corpus/ragtox:/corpus
+    ports:
+      - "127.0.0.1:8767:8767"
+    mem_limit: 512m
+
+  ragurgencias:
+    build: .
+    container_name: ragurgencias
+    restart: unless-stopped
+    environment:
+      RAG_BIND: 0.0.0.0
+      RAG_PORT: 8767
+      RAG_READONLY: 1
+      RAG_DATA_DIR: /corpus
+      RAG_ALLOWED_HOSTS: ragurgencias.pedrojuezmartel.com
+      RAG_ALLOWED_ORIGINS: https://ragurgencias.pedrojuezmartel.com
+      RAG_SIGLA: URG
+      RAG_TITULO: De encontrar protocolos a conectar evidencias
+      RAG_SUBTITULO: >-
+        Explora los protocolos de urgencias, consulta sus fragmentos y
+        comprueba qué relaciones añade el grafo.
+      RAG_EJEMPLOS: >-
+        Ejemplo de urgencias::¿Qué protocolo se sigue ante una parada
+        cardiorrespiratoria?
+      RAG_AVISO: >-
+        Uso exploratorio y documental. No sustituye el criterio clínico.
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LLM_MODEL: ${LLM_MODEL:-gemini-3.8-flash}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - ./corpus/ragurgencias:/corpus
+    ports:
+      - "127.0.0.1:8768:8767"
+    mem_limit: 512m
