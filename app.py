@@ -18,6 +18,8 @@ toxicología de siempre.
                          por defecto, junto al código, como siempre
     RAG_SIGLA            sigla corta de la instancia (título de pestaña, bóveda
                          de Obsidian); por defecto INTCF
+    RAG_KICKER           rótulo pequeño sobre el titular; por defecto
+                         "PILOTO DOCUMENTAL · " + RAG_SIGLA
     RAG_TITULO           titular de la cabecera
     RAG_SUBTITULO        párrafo bajo el titular
     RAG_EJEMPLOS         botones de ejemplo: "Etiqueta::Pregunta" separados por |
@@ -104,6 +106,7 @@ def serve(port=8767, open_browser=False, bind=None):
                 return self.send(403, {'error': 'Host inválido'})
             if self.path == '/':
                 sigla = _env('SIGLA', 'INTCF')
+                kicker = _env('KICKER', 'PILOTO DOCUMENTAL · ' + sigla)
                 titulo = _env('TITULO', 'De encontrar textos a conectar evidencias')
                 subtitulo = _env('SUBTITULO', 'Explora tus documentos, consulta sus fragmentos y '
                                   'comprueba qué relaciones añade el grafo. Una prueba local para '
@@ -123,6 +126,7 @@ def serve(port=8767, open_browser=False, bind=None):
                 pregunta_inicial = ejemplos[0][1].strip() if ejemplos else ''
                 html = (ROOT / 'index.html').read_text(encoding='utf8')
                 html = (html.replace('__TOKEN__', token)
+                            .replace('__KICKER__', _esc_html(kicker))
                             .replace('__SIGLA__', _esc_html(sigla))
                             .replace('__TITULO__', _esc_html(titulo))
                             .replace('__SUBTITULO__', _esc_html(subtitulo))

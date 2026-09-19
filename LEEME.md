@@ -81,6 +81,8 @@ instancia se comporta exactamente como ragtox hoy.
    - `RAG_DATA_DIR`: ruta del corpus preparado en el paso 2.
    - `RAG_SIGLA`: sigla corta (título de pestaña, nombre del ZIP de Obsidian);
      p.ej. `URG`, `CONCURSAL`, `ITRABAJO`.
+   - `RAG_KICKER`: rótulo pequeño sobre el titular (por defecto,
+     `PILOTO DOCUMENTAL · ` seguido de `RAG_SIGLA`).
    - `RAG_TITULO`: titular de la cabecera.
    - `RAG_SUBTITULO`: párrafo bajo el titular.
    - `RAG_EJEMPLOS`: botones de ejemplo, formato `Etiqueta::Pregunta` separados

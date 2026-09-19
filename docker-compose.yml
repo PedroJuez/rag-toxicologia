@@ -9,6 +9,7 @@ services:
       RAG_READONLY: 1
       RAG_ALLOWED_HOSTS: ragtox.pedrojuezmartel.com
       RAG_ALLOWED_ORIGINS: https://ragtox.pedrojuezmartel.com
+      RAG_KICKER: RAG DE TOXICOLOGÍA FORENSE
       # La clave nunca va en la imagen: se lee del .env del servidor
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
       LLM_MODEL: ${LLM_MODEL:-gemini-3.8-flash}

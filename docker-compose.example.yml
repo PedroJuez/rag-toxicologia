@@ -21,6 +21,7 @@ services:
       RAG_ALLOWED_HOSTS: ragtox.pedrojuezmartel.com
       RAG_ALLOWED_ORIGINS: https://ragtox.pedrojuezmartel.com
       RAG_SIGLA: INTCF
+      RAG_KICKER: RAG DE TOXICOLOGÍA FORENSE
       RAG_TITULO: De encontrar textos a conectar evidencias
       RAG_SUBTITULO: >-
         Explora tus documentos, consulta sus fragmentos y comprueba qué
@@ -54,6 +55,7 @@ services:
       RAG_ALLOWED_HOSTS: ragurgencias.pedrojuezmartel.com
       RAG_ALLOWED_ORIGINS: https://ragurgencias.pedrojuezmartel.com
       RAG_SIGLA: URG
+      RAG_KICKER: RAG DE URGENCIAS MÉDICAS
       RAG_TITULO: De encontrar protocolos a conectar evidencias
       RAG_SUBTITULO: >-
         Explora los protocolos de urgencias, consulta sus fragmentos y
