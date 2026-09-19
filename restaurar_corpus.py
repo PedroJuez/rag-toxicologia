@@ -1,11 +1,13 @@
 """Restore the bundled corpus only into a fresh checkout."""
 from pathlib import Path
-import os, zipfile, hashlib, json
+import zipfile, hashlib, json
+from engine import DATA_DIR
 
 code_root=Path(__file__).resolve().parent
 # El zip y su huella van con el código; el destino de la extracción es el
-# corpus (RAG_DATA_DIR si está definida, la carpeta del código si no).
-data_root=Path(os.environ.get('RAG_DATA_DIR') or code_root).resolve()
+# corpus (RAG_DATA_DIR, del entorno o del .env, si está definida; la carpeta
+# del código si no).
+data_root=DATA_DIR
 archive=code_root/'corpus-toxicologia.zip'
 expected=json.loads((code_root/'copia.json').read_text(encoding='utf8'))['archive_sha256']
 if hashlib.sha256(archive.read_bytes()).hexdigest()!=expected:

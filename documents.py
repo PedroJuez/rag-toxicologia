@@ -1,7 +1,7 @@
 """Local imports and resumable, evidence-checked graph extraction."""
 import base64, hashlib, io, json, os, re, subprocess, sys, threading, zipfile
 from pathlib import Path
-from engine import Engine, ROOT, DATA_DIR, model_config, norm
+from engine import Engine, ROOT, DATA_DIR, model_config, norm, sigla
 from prepare_corpus import chunks
 
 
@@ -26,6 +26,16 @@ def verified_relations(result, text):
 def write(path,value):
     temp=path.with_suffix(path.suffix+'.tmp')
     temp.write_text(json.dumps(value,ensure_ascii=False,indent=2),encoding='utf8');temp.replace(path)
+
+
+def init_corpus(root):
+    """Crea data/ y los ficheros vacíos de un corpus nuevo, sin pisar los que existan.
+    No escribe el manifiesto: lo hace upload al final, cuando el documento ya está guardado."""
+    folder=Path(root)/'data'
+    for sub in ('uploads','normalized'):(folder/sub).mkdir(parents=True,exist_ok=True)
+    for name,value in (('knowledge.json',{'nodes':[],'edges':[]}),('semantic-sample.json',[]),('graph-progress.json',[])):
+        if not (folder/name).exists():write(folder/name,value)
+    (folder/'chunks.jsonl').touch()
 
 
 class Documents:
@@ -84,6 +94,7 @@ class Documents:
                 cid=hashlib.sha256(f'{docid}:{version}:{start}:{end}:paragraph-char-v1'.encode()).hexdigest()
                 rows.append(dict(record,chunk_id=cid,corpus_id=e.manifest['corpus_id'],locator={'kind':'normalized_char_offsets','start':start,'end':end},text=content))
             record['chunks']=len(rows)
+            if e.empty:init_corpus(self.root)
             folder=self.root/'data';(folder/'uploads').mkdir(exist_ok=True)
             (folder/'uploads'/(docid+suffix)).write_bytes(data);(folder/rel).write_text(text,encoding='utf8')
             old=(folder/'chunks.jsonl').read_bytes()
@@ -210,7 +221,9 @@ class Documents:
             python=os.environ.get('GRAPHIFY_PYTHON') or sys.executable
             if not Path(python).is_file():python=sys.executable
             # export_views.py es código y vive junto al motor (ROOT), no en el
-            # corpus (self.root/DATA_DIR); hereda RAG_DATA_DIR del entorno para
-            # saber dónde escribir el mapa y la bóveda.
-            result=subprocess.run([python,str(ROOT/'export_views.py')],capture_output=True,timeout=180)
+            # corpus (self.root/DATA_DIR); se le pasan RAG_DATA_DIR y RAG_SIGLA para
+            # que escriba en el corpus correcto y con el nombre de la instancia,
+            # vengan del entorno o del .env (el Python de GRAPHIFY_PYTHON puede no
+            # tener python-dotenv para leerlo por su cuenta).
+            result=subprocess.run([python,str(ROOT/'export_views.py')],capture_output=True,timeout=180,env=dict(os.environ,RAG_DATA_DIR=str(self.root),RAG_SIGLA=sigla()))
             if result.returncode:raise ValueError('La búsqueda y las relaciones están guardadas, pero falló la exportación del mapa o de la bóveda. No es necesario volver a cargar los documentos. Revisa el exportador y sus dependencias.')

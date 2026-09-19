@@ -3,8 +3,15 @@ import json, re, os
 from graphify.build import build_from_json
 from graphify.cluster import cluster
 from graphify.export import to_html, to_obsidian, to_canvas
+from engine import DATA_DIR, SIGLA_DEFECTO, sigla as _sigla
 
-root=Path(os.environ.get('RAG_DATA_DIR') or Path(__file__).resolve().parent).resolve()
+root=DATA_DIR
+sigla=_sigla()
+# La sigla da nombre al mapa y título a la portada de la bóveda. "Toxicológicas"
+# era parte del texto original: solo se conserva en la instalación de
+# toxicología (sigla por defecto); en las demás la frase queda sin dominio.
+canvas=re.sub(r'[^\w.-]+','-',sigla).strip('-') or SIGLA_DEFECTO
+dominio='toxicológicas ' if sigla==SIGLA_DEFECTO else ''
 out=root/'graphify-out'
 extraction=json.loads((out/'extraction.json').read_text(encoding='utf8'))
 knowledge=json.loads((root/'data/knowledge.json').read_text(encoding='utf8'))
@@ -25,7 +32,7 @@ for p in vault.glob('*.md'):
     match=re.search(r'^# ([\s\S]+?)\n\n',text,re.M)
     if match:notes[match.group(1)]=p
 names={n['id']:n['label'] for n in knowledge['nodes']}
-to_canvas(G,communities,str(vault/'Mapa-INTCF.canvas'),community_labels=labels,
+to_canvas(G,communities,str(vault/f'Mapa-{canvas}.canvas'),community_labels=labels,
           node_filenames={n:notes[G.nodes[n]['label']].stem for n in G.nodes})
 for node in knowledge['nodes']:
     p=notes.get(node['label'])
@@ -39,6 +46,6 @@ for node in knowledge['nodes']:
         otherp=notes.get(names[other]);link=f'[[{otherp.stem}|{names[other]}]]' if otherp else names[other]
         extra += [f"### {names[e['source']]} → {names[e['target']]}",f"Relación: {e['relation']} · concepto conectado: {link}",'', '> '+e['evidence_quote'].replace('\n','\n> '),'',f"Fuente: {c['source_file']}",f"Fragmento: `{c['chunk_id']}`",f"Localizador: {json.dumps(c['locator'],ensure_ascii=False)}",'']
     p.write_text(text+'\n'.join(extra),encoding='utf8')
-(vault/'INICIO.md').write_text('# INTCF · Grafo documental\n\nAbre la vista de grafo de Obsidian para navegar todas las notas. Abre una nota de concepto para leer sus relaciones y citas. Las notas de comunidad agrupan conceptos conectados.\n\nEl alcance aumenta al incorporar documentos. Consulta la pestaña Documentos de la aplicación para conocer el progreso de extracción. Las notas conservan las afirmaciones con sus evidencias; el mapa agrupa algunos pares.\n\nLos colores/comunidades indican agrupaciones del algoritmo, no categorías toxicológicas validadas.\n',encoding='utf8')
+(vault/'INICIO.md').write_text(f'# {sigla} · Grafo documental\n\nAbre la vista de grafo de Obsidian para navegar todas las notas. Abre una nota de concepto para leer sus relaciones y citas. Las notas de comunidad agrupan conceptos conectados.\n\nEl alcance aumenta al incorporar documentos. Consulta la pestaña Documentos de la aplicación para conocer el progreso de extracción. Las notas conservan las afirmaciones con sus evidencias; el mapa agrupa algunos pares.\n\nLos colores/comunidades indican agrupaciones del algoritmo, no categorías {dominio}validadas.\n',encoding='utf8')
 print('HTML:',out/'graph.html')
 print('Obsidian:',count,'native notes + INICIO; evidence added to',len(notes),'notes')

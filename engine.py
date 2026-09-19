@@ -4,29 +4,64 @@ from collections import Counter, defaultdict
 import json, math, os, re, unicodedata
 
 ROOT=Path(__file__).resolve().parent
+
+def env(nombre,default=''):
+    """RAG_<nombre>, o RAGTOX_<nombre> (nombre anterior), del entorno o, si allí
+    no está o está vacía, del .env del proyecto. El entorno manda sobre .env,
+    como en model_config. El .env se relee en cada llamada."""
+    try:
+        from dotenv import dotenv_values
+        archivo=dotenv_values(ROOT/'.env')
+    except ImportError:archivo={}
+    for origen in (os.environ,archivo):
+        for prefijo in ('RAG_','RAGTOX_'):
+            if origen.get(prefijo+nombre):return origen[prefijo+nombre]
+    return default
+
+SIGLA_DEFECTO='INTCF'
+def sigla():
+    """Sigla de la instancia (RAG_SIGLA); INTCF, la de toxicología, si no se define."""
+    return env('SIGLA',SIGLA_DEFECTO)
+
 # El corpus (data/, graphify-out/, boveda-obsidian/) vive junto al código por
 # defecto, igual que siempre. RAG_DATA_DIR permite montarlo en otra ruta (p.ej.
 # un volumen Docker propio por instancia) sin tocar el código de cada motor.
-DATA_DIR=Path(os.environ.get('RAG_DATA_DIR') or ROOT).resolve()
+DATA_DIR=Path(env('DATA_DIR') or ROOT).resolve()
 STOP=set('de del la las el los un una unos unas y o en por para con sin al que se es son como cual cuales hay sobre entre a su sus lo le me quiero saber segun documentos'.split())
 def norm(text):
     return ''.join(c for c in unicodedata.normalize('NFD',text.lower()) if not unicodedata.combining(c))
 def tokens(text):
     return [t for t in re.findall(r'[a-z0-9]+',norm(text)) if len(t)>2 and t not in STOP]
 
+def is_new_corpus(root):
+    """Instalación sin corpus: no hay manifiesto ni fragmentos. Si falta el
+    manifiesto pero chunks.jsonl tiene datos, es un corpus dañado (o una
+    RAG_DATA_DIR mal apuntada) y no se trata como vacío para no pisarlo."""
+    data=Path(root)/'data';chunks=data/'chunks.jsonl'
+    return not (data/'manifest.json').exists() and (not chunks.exists() or chunks.stat().st_size==0)
+
+def new_manifest(root):
+    """Manifiesto de un corpus vacío, con la misma forma que deja prepare_corpus.py."""
+    slug=re.sub(r'[^a-z0-9]+','-',norm(env('SIGLA') or Path(root).name)).strip('-')
+    return {'schema_version':1,'corpus_id':'rag-'+(slug or 'corpus'),'status':'complete',
+            'chunker':'paragraph-char-v1','chunk_size':2400,'documents':[]}
+
 class Engine:
-    def __init__(self, root=DATA_DIR):
+    def __init__(self, root=DATA_DIR, allow_empty=True):
         self.root=Path(root)
-        self.manifest=json.loads((self.root/'data/manifest.json').read_text(encoding='utf8'))
+        # Sin corpus, el motor arranca vacío en memoria y no escribe nada en disco;
+        # data/ se crea al subir el primer documento (Documents.upload).
+        self.empty=allow_empty and is_new_corpus(self.root)
+        self.manifest=new_manifest(self.root) if self.empty else json.loads((self.root/'data/manifest.json').read_text(encoding='utf8'))
         if self.manifest['status']!='complete':raise ValueError('Incomplete corpus')
-        self.rows=[json.loads(x) for x in (self.root/'data/chunks.jsonl').read_text(encoding='utf8').splitlines()]
+        self.rows=[] if self.empty else [json.loads(x) for x in (self.root/'data/chunks.jsonl').read_text(encoding='utf8').splitlines()]
         self.byid={r['chunk_id']:r for r in self.rows}
         self.counters=[Counter(tokens(r['text'])) for r in self.rows]
         self.lengths=[sum(c.values()) for c in self.counters]
-        self.avg=sum(self.lengths)/len(self.rows)
+        self.avg=sum(self.lengths)/len(self.rows) if self.rows else 0
         df=Counter(t for c in self.counters for t in c)
         self.idf={t:math.log(1+(len(self.rows)-n+.5)/(n+.5)) for t,n in df.items()}
-        self.graph=json.loads((self.root/'data/knowledge.json').read_text(encoding='utf8'))
+        self.graph={'nodes':[],'edges':[]} if self.empty else json.loads((self.root/'data/knowledge.json').read_text(encoding='utf8'))
         self.nodes={n['id']:n for n in self.graph['nodes']}
         self.adj=defaultdict(list)
         for edge in self.graph['edges']:
@@ -85,7 +120,7 @@ class Engine:
     def stats(self):
         return {'documents':len(self.manifest['documents']),'chunks':len(self.rows),
                 'entities':len(self.nodes),'relations':len(self.graph['edges']),
-                'semantic_chunks':len(json.loads((self.root/'data/semantic-sample.json').read_text())),
+                'semantic_chunks':0 if self.empty else len(json.loads((self.root/'data/semantic-sample.json').read_text())),
                 'files':[d['source_file'] for d in self.manifest['documents']]}
 
 def model_config(public=False):

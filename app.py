@@ -25,9 +25,16 @@ toxicología de siempre.
     RAG_EJEMPLOS         botones de ejemplo: "Etiqueta::Pregunta" separados por |
     RAG_AVISO            aviso del pie de página
 
+    Las variables RAG_* se leen del entorno y, si no están allí, del archivo
+    .env del proyecto (el mismo de las claves del proveedor). El entorno manda.
+
     Las variables RAGTOX_* (nombres anteriores a que el motor fuese común a
     varios RAG) se siguen leyendo si RAG_* no está definida, para no romper el
     despliegue ya en marcha de ragtox.
+
+    Sin corpus (no existe data/manifest.json) el motor arranca vacío, con las
+    cifras a cero; data/ y el manifiesto se crean al subir el primer documento
+    desde la pestaña «Documentos». No aplica con RAG_READONLY=1.
 
 Por qué el modo de solo lectura: /api/documents/graph llama al proveedor con tu
 clave. Publicado sin autenticación, cualquiera podría consumir la cuota, subir
@@ -38,17 +45,12 @@ local y se despliega ya hecho.
 
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
-import argparse, json, os, secrets, threading, webbrowser
+import argparse, json, secrets, threading, webbrowser
 
-from engine import Engine, generate, model_config, DATA_DIR
+from engine import Engine, generate, model_config, DATA_DIR, env as _env, sigla as _sigla
 from documents import Documents
 
 ROOT = Path(__file__).resolve().parent
-
-
-def _env(nombre, default=''):
-    """RAG_<nombre>, o RAGTOX_<nombre> por compatibilidad, o el valor por defecto."""
-    return os.environ.get('RAG_' + nombre) or os.environ.get('RAGTOX_' + nombre) or default
 
 
 def _lista(nombre):
@@ -84,8 +86,11 @@ def serve(port=8767, open_browser=False, bind=None):
     def motor():
         if not READONLY:
             return Engine()
+        # En solo lectura no hay forma de subir el primer documento: un corpus
+        # ausente es un error de despliegue (p.ej. volumen mal montado), no un
+        # corpus vacío.
         if 'engine' not in _cache:
-            _cache['engine'] = Engine()
+            _cache['engine'] = Engine(allow_empty=False)
         return _cache['engine']
 
     class Handler(BaseHTTPRequestHandler):
@@ -105,7 +110,7 @@ def serve(port=8767, open_browser=False, bind=None):
             if not self.host_valido():
                 return self.send(403, {'error': 'Host inválido'})
             if self.path == '/':
-                sigla = _env('SIGLA', 'INTCF')
+                sigla = _sigla()
                 kicker = _env('KICKER', 'PILOTO DOCUMENTAL · ' + sigla)
                 titulo = _env('TITULO', 'De encontrar textos a conectar evidencias')
                 subtitulo = _env('SUBTITULO', 'Explora tus documentos, consulta sus fragmentos y '
@@ -147,7 +152,7 @@ def serve(port=8767, open_browser=False, bind=None):
                 return self.send(200, config)
             if self.path == '/obsidian.zip':
                 import io, zipfile
-                sigla = _env('SIGLA', 'INTCF')
+                sigla = _sigla()
                 buffer = io.BytesIO()
                 with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
                     for file in (DATA_DIR / 'boveda-obsidian').rglob('*'):
@@ -210,7 +215,7 @@ def serve(port=8767, open_browser=False, bind=None):
                                          'Prueba sin redacción externa.'})
 
     server = ThreadingHTTPServer((bind, port), Handler)
-    print(f'{_env("SIGLA", "INTCF")} GraphRAG escuchando en {bind}:{port}'
+    print(f'{_sigla()} GraphRAG escuchando en {bind}:{port}'
           + (' · solo consulta' if READONLY else ''), flush=True)
     if open_browser: webbrowser.open(f'http://127.0.0.1:{port}')
     try: server.serve_forever()

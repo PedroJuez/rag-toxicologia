@@ -17,6 +17,7 @@ La llamada anterior a OpenAI devolvió 429 por saldo agotado. Gemini está integ
 
 `.env` es privado y `.env.example` es la plantilla sin claves. `.gitignore` excluye claves, corpus, grafos y bóveda, que contienen textos de los documentos. Todavía no se ha publicado nada.
 Para una instalación nueva: crea un entorno con `python -m venv .venv`, instala `requirements.txt` y copia `.env.example` a `.env`. Los datos del piloto se deben aportar por separado en `data/`; clonar solo el código no incluye el corpus. Ejecuta `.venv\Scripts\python app.py --open`.
+Si no hay corpus (no existe `data/manifest.json`), la aplicación arranca vacía, con las cifras a cero: sube el primer documento desde «Documentos» y se crean `data/` y el manifiesto. Con `RAG_READONLY=1` no aplica y la ausencia de corpus sigue siendo un error.
 
 
 ## Alcance real
@@ -68,7 +69,8 @@ entorno. Cada instancia corre en su propio contenedor, con el mismo código y su
 propio corpus montado como volumen. Sin ninguna variable definida, una
 instancia se comporta exactamente como ragtox hoy.
 
-1. **Prepara el corpus aparte.** Convierte los documentos de la temática nueva
+1. **Prepara el corpus aparte** (o salta este paso y empieza con un corpus vacío,
+   subiendo los documentos desde la pestaña «Documentos»). Convierte los documentos de la temática nueva
    con `prepare_corpus.py --source <carpeta origen> --output <carpeta destino>
    --corpus-id <id>`. El destino es una carpeta nueva y vacía (no reutilices
    `./data`); ahí es donde luego apuntará `RAG_DATA_DIR`.
@@ -77,9 +79,11 @@ instancia se comporta exactamente como ragtox hoy.
    subdirectorios (igual que hoy los contiene la raíz del proyecto). Súbelos al
    servidor como el volumen propio de esa instancia.
 3. **Define las variables de la instancia** (todas opcionales; sin definirlas,
-   el texto es el de toxicología):
+   el texto es el de toxicología). Se leen del entorno o, si no están allí, del
+   `.env` del proyecto; el entorno manda:
    - `RAG_DATA_DIR`: ruta del corpus preparado en el paso 2.
-   - `RAG_SIGLA`: sigla corta (título de pestaña, nombre del ZIP de Obsidian);
+   - `RAG_SIGLA`: sigla corta (título de pestaña, nombre del ZIP de Obsidian,
+     del mapa `Mapa-<sigla>.canvas` y título de la portada de la bóveda);
      p.ej. `URG`, `CONCURSAL`, `ITRABAJO`.
    - `RAG_KICKER`: rótulo pequeño sobre el titular (por defecto,
      `PILOTO DOCUMENTAL · ` seguido de `RAG_SIGLA`).

@@ -63,4 +63,56 @@ class DocumentTests(unittest.TestCase):
         for name,content in [('../escape.txt','YQ=='),('a.txt','?'),('a.exe','YQ=='),('empty.txt','')]:
             with self.assertRaises(ValueError):self.docs.upload(name,content)
 
+class EmptyCorpusTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)/'corpus';self.docs=Documents(self.root)
+    def tearDown(self):self.tmp.cleanup()
+    def upload(self,name,text):return self.docs.upload(name,base64.b64encode(text.encode()).decode())['document_id']
+    def test_starts_empty_without_writing_anything(self):
+        self.assertEqual(Engine(self.root).stats(),{'documents':0,'chunks':0,'entities':0,'relations':0,'semantic_chunks':0,'files':[]})
+        self.assertEqual(Engine(self.root).search('concurso acreedores')['sources'],[])
+        self.assertEqual(self.docs.listing()['documents'],[])
+        with self.assertRaises(ValueError):self.docs.delete('inexistente')
+        self.assertFalse(self.root.exists())
+    def test_first_upload_creates_corpus_then_delete_returns_to_empty(self):
+        from unittest.mock import patch
+        with patch('dotenv.dotenv_values',return_value={'RAG_SIGLA':'CONCURSAL'}),patch.dict('os.environ',{'RAG_SIGLA':''}):
+            docid=self.upload('primero.txt','El administrador concursal presenta el informe del articulo 100.')
+        for name in ('manifest.json','chunks.jsonl','knowledge.json','semantic-sample.json','graph-progress.json'):
+            self.assertTrue((self.root/'data'/name).is_file(),name)
+        manifest=json.loads((self.root/'data/manifest.json').read_text(encoding='utf8'))
+        self.assertEqual((manifest['status'],manifest['corpus_id']),('complete','rag-concursal'))
+        self.assertEqual(Engine(self.root).search('administrador concursal')['sources'][0]['source_file'],'primero.txt')
+        self.assertEqual(Engine(self.root).stats()['documents'],1)
+        self.docs.delete(docid)
+        self.assertEqual(Engine(self.root).stats()['chunks'],0)   # borrar el último documento no rompe el motor
+        self.upload('segundo.txt','Otro documento sobre la calificacion del concurso.')
+        self.assertEqual(Engine(self.root).stats()['documents'],1)
+    def test_failed_first_upload_leaves_no_corpus(self):
+        with self.assertRaises(ValueError):self.docs.upload('mal.exe','YQ==')
+        self.assertFalse(self.root.exists())
+    def test_missing_manifest_with_existing_chunks_is_not_treated_as_empty(self):
+        (self.root/'data').mkdir(parents=True);(self.root/'data/chunks.jsonl').write_text('{"chunk_id":"x"}\n',encoding='utf8')
+        with self.assertRaises(FileNotFoundError):Engine(self.root)
+    def test_allow_empty_false_still_fails_without_manifest(self):
+        with self.assertRaises(FileNotFoundError):Engine(self.root,allow_empty=False)
+
+class EnvTests(unittest.TestCase):
+    def test_reads_env_file_and_environment_wins(self):
+        from unittest.mock import patch
+        from engine import env
+        dotenv={'RAG_TITULO':'del .env','RAG_SIGLA':'CONCURSAL','RAGTOX_KICKER':'alias en .env'}
+        with patch('dotenv.dotenv_values',return_value=dotenv),patch.dict('os.environ',{'RAG_TITULO':'del entorno','RAG_SIGLA':''},clear=False):
+            self.assertEqual(env('TITULO'),'del entorno')        # el entorno manda
+            self.assertEqual(env('SIGLA'),'CONCURSAL')          # vacío en el entorno: se usa .env
+            self.assertEqual(env('KICKER'),'alias en .env')     # alias RAGTOX_ también en .env
+            self.assertEqual(env('AVISO','defecto'),'defecto')
+    def test_sigla_defaults_to_toxicology_and_reads_env_file(self):
+        from unittest.mock import patch
+        from engine import sigla
+        with patch('dotenv.dotenv_values',return_value={}),patch.dict('os.environ',{'RAG_SIGLA':'','RAGTOX_SIGLA':''}):
+            self.assertEqual(sigla(),'INTCF')
+        with patch('dotenv.dotenv_values',return_value={'RAG_SIGLA':'Concursal'}),patch.dict('os.environ',{'RAG_SIGLA':'','RAGTOX_SIGLA':''}):
+            self.assertEqual(sigla(),'Concursal')
+
 if __name__=='__main__':unittest.main()
