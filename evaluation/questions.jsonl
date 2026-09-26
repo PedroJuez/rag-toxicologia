@@ -1,0 +1,30 @@
+{"id": "Q01", "question": "¿Qué limitaciones tienen los inmunoensayos para detectar drogas?", "expected_chunk_ids": ["0d551552ffba3e62ed0166e5d66101238a742c51fd958ff03e9305fd97a387a1"], "label_status": "seed_passage_reviewed"}
+{"id": "Q02", "question": "¿Qué métodos se utilizan para confirmar un cribado de drogas y qué limitaciones tienen?", "expected_chunk_ids": ["1db5a594318edb41b0a5ff94017e2a86b4762be4dea1872332831bb1c267fafe"], "label_status": "seed_passage_reviewed"}
+{"id": "Q03", "question": "¿A qué hora sale mañana el tren de Madrid a Sevilla?", "expected_chunk_ids": [], "label_status": "negative_control", "unanswerable": true}
+{"id": "Q04", "question": "xyznonexistent abcunknown", "expected_chunk_ids": [], "label_status": "negative_control", "unanswerable": true}
+{"id": "Q05", "question": "¿Por qué un inmunoensayo puede dar falsos positivos?", "expected_chunk_ids": ["0d551552ffba3e62ed0166e5d66101238a742c51fd958ff03e9305fd97a387a1"], "label_status": "seed_passage_reviewed"}
+{"id": "Q06", "question": "¿Por qué un resultado negativo en inmunoensayo no excluye todas las drogas?", "expected_chunk_ids": ["0d551552ffba3e62ed0166e5d66101238a742c51fd958ff03e9305fd97a387a1"], "label_status": "seed_passage_reviewed"}
+{"id": "Q07", "question": "¿Qué relación hay entre cocaína, etanol y cocaetileno?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q08", "question": "¿Qué metabolitos de cocaína se detectan en orina?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q09", "question": "¿Cómo se relaciona el etilglucurónido con el consumo de etanol y el cabello?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q10", "question": "¿Qué diferencias recoge el corpus entre detectar cocaína en sangre y en cabello?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q11", "question": "¿Cómo deben conservarse las muestras para analizar etanol?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q12", "question": "¿Qué diferencias hay entre cribado y confirmación?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q13", "question": "¿Detectar una sustancia demuestra intoxicación?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q14", "question": "¿Qué limitaciones tiene la interpretación de resultados en cabello?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q15", "question": "¿Qué factores pueden alterar la concentración de etanol tras la muerte?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q16", "question": "¿Cómo se detecta la manipulación de una muestra de orina?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q17", "question": "¿Qué significa reactividad cruzada en un inmunoensayo?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q18", "question": "¿Qué diferencias hay entre sensibilidad y especificidad?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q19", "question": "¿Qué muestras recomienda el corpus ante sospecha de nuevas drogas psicoactivas?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q20", "question": "¿Qué información aporta la cromatografía acoplada a espectrometría de masas?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q21", "question": "¿Qué limitaciones tiene la detección de benzodiacepinas mediante inmunoensayo?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q22", "question": "¿Puede un cribado de opiáceos detectar todos los opioides?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q23", "question": "¿Qué documentos describen análisis de ketamina?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q24", "question": "¿Qué importancia tiene el punto de corte para interpretar un resultado negativo?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q25", "question": "¿Qué dice el corpus sobre la cadena de custodia de las muestras?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q26", "question": "¿Cómo distingue el corpus exposición reciente y consumo repetido?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q27", "question": "¿Qué diferencias hay entre analizar orina y saliva?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q28", "question": "¿Cómo influye la dilución de orina en el cribado?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q29", "question": "¿Qué limitaciones tiene la cromatografía de gases?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}
+{"id": "Q30", "question": "¿Qué información falta para interpretar un resultado toxicológico individual?", "expected_chunk_ids": [], "label_status": "pending_expert_review"}

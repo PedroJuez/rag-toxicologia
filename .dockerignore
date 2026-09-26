@@ -5,3 +5,9 @@ __pycache__
 venv
 corpus-toxicologia.zip
 ABRIR.cmd
+.venv
+.test-tmp
+data/models
+data/uv-cache
+data/retrieval-cache
+evaluation/results*.json

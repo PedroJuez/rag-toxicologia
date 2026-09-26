@@ -1,0 +1,3 @@
+-r requirements.txt
+laya==0.3.20
+sentence-transformers>=3,<6

@@ -28,7 +28,9 @@ class DocumentTests(unittest.TestCase):
         export.assert_called_once()
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
-        shutil.copytree(ROOT/'data',self.root/'data');self.docs=Documents(self.root)
+        shutil.copytree(ROOT/'data',self.root/'data',
+                        ignore=shutil.ignore_patterns('models', 'uv-cache', 'retrieval-cache'))
+        self.docs=Documents(self.root)
     def tearDown(self):self.tmp.cleanup()
     def test_upload_retrievable_and_duplicate_rejected(self):
         text='Pruebax pertenece al grupo Ensayoy.'

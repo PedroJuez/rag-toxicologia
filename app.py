@@ -139,12 +139,15 @@ def serve(port=8767, open_browser=False, bind=None):
                             .replace('__EJEMPLOS__', ejemplos_html)
                             .replace('__PREGUNTA_INICIAL__', _esc_html(pregunta_inicial)))
                 if READONLY:
-                    # Oculta la pestaña de documentos sin tocar index.html
-                    html = html.replace(
-                        '</script></html>',
-                        "\ndocument.getElementById('tab-documents').hidden=true;\n</script></html>")
+                    # Hide before the first paint and exclude keyboard navigation.
+                    html = html.replace('id="tab-documents"', 'id="tab-documents" hidden')
+                    html = html.replace("const views=['query','graph','documents'];",
+                                        "const views=['query','graph'];")
                 return self.send(200, html.encode(), 'text/html')
-            if self.path == '/api/documents': return self.send(200, documents.listing())
+            if self.path == '/api/documents':
+                if READONLY:
+                    return self.send(403, {'error': 'Esta instalación es de solo consulta.'})
+                return self.send(200, documents.listing())
             if self.path == '/api/stats':
                 with documents.lock: return self.send(200, motor().stats())
             if self.path == '/api/config':
@@ -194,16 +197,19 @@ def serve(port=8767, open_browser=False, bind=None):
                 q = request.get('question'); mode = request.get('mode', 'graph')
                 if not isinstance(q, str) or not 3 <= len(q.strip()) <= 1200:
                     raise ValueError('Escribe una pregunta de 3 a 1200 caracteres.')
-                if mode not in ['graph', 'baseline']: raise ValueError('Modo no válido')
+                if mode not in ['graph', 'baseline', 'hybrid', 'laya']: raise ValueError('Modo no válido')
                 if not busy.acquire(blocking=False):
                     return self.send(429, {'error': 'Hay dos consultas en curso. Espera un momento.'})
                 try:
                     if READONLY:
-                        result = motor().search(q, mode)     # índice ya construido
+                        query_engine = motor()
+                        result = query_engine.search(q, mode)
                     else:
-                        with documents.lock: result = Engine().search(q, mode)
+                        with documents.lock:
+                            query_engine = Engine()
+                            result = query_engine.search(q, mode)
                     if request.get('generate') is True:
-                        try: result = generate(result)
+                        try: result = generate(result, engine=query_engine)
                         except ValueError as exc: result['generation_error'] = str(exc)
                     self.send(200, result)
                 finally:
