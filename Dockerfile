@@ -1,12 +1,18 @@
 FROM python:3.12-slim
 
-# Sin compiladores ni ruedas pesadas: las cuatro dependencias son puras.
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY requirements.txt requirements-retrieval.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+
+# The default image stays lightweight. The optional overlay enables local models.
+ARG LOCAL_RETRIEVAL=0
+RUN if [ "$LOCAL_RETRIEVAL" = "1" ]; then \
+      pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+      pip install --no-cache-dir -r requirements-retrieval.txt; \
+    fi
 
 COPY . .
 
@@ -17,7 +23,8 @@ ENV RAG_BIND=0.0.0.0 RAG_PORT=8767 RAG_READONLY=1
 EXPOSE 8767
 
 # Usuario sin privilegios: si algún día se habilita la subida, no escribe como root.
-RUN useradd -m -u 10001 ragtox && chown -R ragtox:ragtox /app
+RUN mkdir -p /app/data/models /app/data/retrieval-cache && \
+    useradd -m -u 10001 ragtox && chown -R ragtox:ragtox /app
 USER ragtox
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \

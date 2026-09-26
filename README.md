@@ -76,6 +76,23 @@ Los modelos, cachés y resultados de evaluación no se incluyen en Git ni en Doc
 El Dockerfile ligero sigue sin instalar los extras: requiere preparación aparte
 para ejecutar modelos locales. No se ha desplegado este piloto en el VPS.
 
+Para instalar los modelos en Docker existe `docker-compose.models.yml`. Antes de
+utilizarlo, comprobar RAM y disco libres: eleva el límite del contenedor de 512 MB
+a 4 GB y conserva el modo de solo consulta y el puerto ligado a localhost. Los
+modelos y su caché usan volúmenes persistentes independientes del corpus.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.models.yml build ragtox
+docker compose -f docker-compose.yml -f docker-compose.models.yml run --rm --no-deps ragtox python prepare_retrieval.py
+docker compose -f docker-compose.yml -f docker-compose.models.yml up -d --no-deps ragtox
+```
+
+Estos comandos se ejecutan en el VPS solo tras comprobar recursos, corpus y una
+copia recuperable del despliegue. No modifican `.env` ni la contraseña de Caddy.
+Usar ambos archivos también en futuras actualizaciones para conservar los modelos.
+La autenticación HTTP Basic sigue siendo responsabilidad del proxy existente:
+el servidor Python no sustituye esa protección y su puerto no debe publicarse.
+
 El umbral de similitud semántica de 0,78 y los pesos de combinación son valores
 iniciales, sin calibración experta. No deben interpretarse como probabilidades.
 El prompt exige responder al aspecto solicitado y señalar carencias de evidencia;

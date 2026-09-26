@@ -54,6 +54,7 @@ class ReadOnlyTests(unittest.TestCase):
                 with self.assertRaises(urllib.error.HTTPError) as caught:
                     urllib.request.urlopen(request)
                 self.assertEqual(caught.exception.code, 403)
+                caught.exception.close()
 
     def test_provider_config_does_not_expose_credentials(self):
         with urllib.request.urlopen(self.base + '/api/config') as response:

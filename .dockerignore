@@ -1,5 +1,7 @@
 ﻿.git
 .env
+.env.*
+!.env.example
 __pycache__
 *.pyc
 venv
@@ -11,3 +13,5 @@ data/models
 data/uv-cache
 data/retrieval-cache
 evaluation/results*.json
+data/repro-*.json
+data/retrieval-smoke.json

@@ -1,0 +1,18 @@
+# Optional: inspect available VPS memory/disk before enabling this overlay.
+# Preserves RAG_READONLY, the loopback port and credentials from the base file.
+services:
+  ragtox:
+    build:
+      context: .
+      args:
+        LOCAL_RETRIEVAL: "1"
+    mem_limit: 4g
+    environment:
+      HF_HOME: /app/data/models/hub
+    volumes:
+      - ragtox-models:/app/data/models
+      - ragtox-retrieval-cache:/app/data/retrieval-cache
+
+volumes:
+  ragtox-models:
+  ragtox-retrieval-cache:
